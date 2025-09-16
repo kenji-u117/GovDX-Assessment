@@ -1,0 +1,1841 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自治体DX組織評価システム</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 1.5rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-2px);
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .member-item {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .chart-container {
+            height: 400px;
+            position: relative;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            border-top: 4px solid #3b82f6;
+        }
+
+        .result-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .ai-comment {
+            background: linear-gradient(135deg, #dbeafe 0%, #f0f9ff 100%);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid #3b82f6;
+            white-space: pre-wrap;
+        }
+
+        .category-section {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .category-blue { border-left-color: #3b82f6; }
+        .category-green { border-left-color: #10b981; }
+        .category-purple { border-left-color: #8b5cf6; }
+        .category-orange { border-left-color: #f59e0b; }
+        .category-red { border-left-color: #ef4444; }
+
+        .question-item {
+            margin-bottom: 0.75rem;
+            padding: 0.75rem;
+            background: white;
+            border-radius: 0.375rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .question-label {
+            font-size: 0.875rem;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .score-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        .criteria-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+        }
+
+        .criteria-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .criteria-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .criteria-5 { background: #dcfce7; border-color: #16a34a; }
+        .criteria-4 { background: #dbeafe; border-color: #2563eb; }
+        .criteria-3 { background: #fef3c7; border-color: #d97706; }
+        .criteria-2 { background: #fed7d7; border-color: #dc2626; }
+        .criteria-1 { background: #fee2e2; border-color: #b91c1c; }
+
+        .improvement-section {
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .priority-high { border-left-color: #dc2626; }
+        .priority-medium { border-left-color: #d97706; }
+        .priority-low { border-left-color: #16a34a; }
+
+         {
+            body {
+                background: white;
+            }
+            .card {
+                box-shadow: none;
+                border: 1px solid #e5e7eb;
+            }
+            .btn-primary, .btn-secondary {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen p-6">
+        <div class="max-w-6xl mx-auto">
+            <!-- タイトル -->
+            <div class="text-center mb-8 bg-white p-6 rounded-xl shadow-lg">
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                    <i class="fas fa-users text-blue-600 mr-3"></i>
+                    自治体DX組織評価システム
+                </h1>
+                <p class="text-gray-600 text-lg">総務省デジタル人材の育成ガイドブックp17</p>
+            </div>
+
+            <!-- メンバー管理 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-user-cog mr-2"></i>メンバー管理
+                </div>
+                <div class="p-6">
+                    <div class="flex flex-wrap gap-4 mb-6">
+                        <button onclick="showAddMemberModal()" class="btn-primary">
+                            <i class="fas fa-user-plus mr-2"></i>メンバー追加
+                        </button>
+                        <button onclick="document.getElementById('csvFile').click()" class="btn-secondary">
+                            <i class="fas fa-file-upload mr-2"></i>CSVインポート
+                        </button>
+                        <button onclick="downloadTemplate()" class="btn-secondary">
+                            <i class="fas fa-download mr-2"></i>テンプレート
+                        </button>
+                        <button onclick="analyzeOrganization()" class="btn-primary">
+                            <i class="fas fa-chart-line mr-2"></i>分析実行
+                        </button>
+                    </div>
+                    
+                    <input type="file" id="csvFile" accept=".csv" style="display: none" onchange="importCSV(event)">
+                    
+                    <div id="memberList">
+                        <p class="text-gray-500 text-center py-8">メンバーを追加してください</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分析結果 -->
+            <div id="analysisResults" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-bar mr-2"></i>組織分析結果
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <div id="organizationStats" class="mb-6"></div>
+                                <div id="organizationLevel" class="result-card"></div>
+                            </div>
+                            <div>
+                                <div class="chart-container">
+                                    <canvas id="radarChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 個人別詳細分析 -->
+                        <div id="individualAnalysis" class="mt-6"></div>
+                        
+                        <!-- AI分析コメント -->
+                        <div id="aiAnalysis" class="ai-comment mt-6"></div>
+                        
+                        <!-- 改善提案 -->
+                        <div id="improvementPlans" class="mt-6"></div>
+                        
+                        <div class="text-center mt-6">
+                            <button onclick="exportResults()" class="btn-secondary">
+                                <i class="fas fa-download mr-2"></i>結果をCSV出力
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let teamMembers = [];
+        let analysisData = null;
+        
+        // 詳細評価基準データ
+        const detailedEvaluationCriteria = {
+            'dx-leader': {
+                categories: ['デジタル基礎知識', '業務課題把握・改善能力', '組織連携・リーダーシップ', 'デジタルツール活用・導入', '住民サービス創出・改善'],
+                questions: [
+                    {
+                        text: 'デジタル技術の基本概念（クラウド、AI、RPA等）を理解していますか？',
+                        criteria: {
+                            5: '新しい技術動向を常に把握し、実務への応用方法を考えられる',
+                            4: '複数の技術の違いや特性を説明できる',
+                            3: '基本的な仕組みと活用場面は理解している',
+                            2: '名称は知っているが仕組みは理解していない',
+                            1: 'ほとんど知識がない'
+                        }
+                    },
+                    {
+                        text: '自治体DXの目的と意義を理解していますか？',
+                        criteria: {
+                            5: '自組織の将来ビジョンとDXの関連性を説明し、推進できる',
+                            4: '自治体DXの全体像と自組織における意義を説明できる',
+                            3: '基本的な目的と意義を説明できる',
+                            2: '言葉は知っているが具体的な内容は説明できない',
+                            1: 'ほとんど理解していない'
+                        }
+                    },
+                    {
+                        text: '所属部署の業務課題を把握していますか？',
+                        criteria: {
+                            5: '中長期的な視点で課題を予測し、対策を立案できる',
+                            4: '課題の優先順位付けと根本原因分析ができる',
+                            3: '主要な課題を体系的に把握している',
+                            2: 'いくつかの課題は把握している',
+                            1: '課題の把握はしていない'
+                        }
+                    },
+                    {
+                        text: 'デジタル技術を活用した業務改善案を提案できますか？',
+                        criteria: {
+                            5: '複数の選択肢を比較検討し、最適な改善案を提示できる',
+                            4: '費用対効果を含めた改善案を体系的に提案できる',
+                            3: '実現可能な改善案を具体的に提案できる',
+                            2: '簡単な改善案を考えたことはある',
+                            1: '提案した経験がない'
+                        }
+                    },
+                    {
+                        text: 'デジタル化推進にあたり、関係者との調整・合意形成ができますか？',
+                        criteria: {
+                            5: '組織の壁を超えた協力体制を構築し、維持できる',
+                            4: '組織横断的な合意形成の場を設定し、進行できる',
+                            3: '主要な関係者全員と調整し、合意を得られる',
+                            2: '一部の関係者とのみ相談している',
+                            1: '自分だけで進めようとしている'
+                        }
+                    },
+                    {
+                        text: 'デジタル化に対する組織内の心理的ハードルを下げる工夫ができますか？',
+                        criteria: {
+                            5: '継続的な対話と参加型のプロセスで組織文化を変革している',
+                            4: '段階的な導入と成功体験の共有を計画している',
+                            3: '職員の不安や懸念に対応する場を設けている',
+                            2: '説明会などで情報提供はしている',
+                            1: '特に工夫していない'
+                        }
+                    },
+                    {
+                        text: '業務に適したデジタルツールを選定できますか？',
+                        criteria: {
+                            5: '将来的な拡張性や他システムとの連携も視野に入れた選定ができる',
+                            4: 'コスト面や運用面も考慮した総合的な選定ができる',
+                            3: '業務要件に基づいたツール選定ができる',
+                            2: 'いくつかのツールを比較したことはある',
+                            1: 'ツールの選定経験がない'
+                        }
+                    },
+                    {
+                        text: 'デジタルツールの導入・運用プロジェクトをマネジメントできますか？',
+                        criteria: {
+                            5: '複数のプロジェクトを並行して管理し、成果を最大化できる',
+                            4: 'リスク管理や進捗管理を適切に行いながら推進できる',
+                            3: '計画立案から実装までの一連の流れを管理できる',
+                            2: '小規模なプロジェクトを経験したことがある',
+                            1: 'プロジェクト管理の経験がない'
+                        }
+                    },
+                    {
+                        text: 'デジタル技術を活用した新たな住民サービスを構想できますか？',
+                        criteria: {
+                            5: '複数の技術やデータを組み合わせた革新的なサービスを創出できる',
+                            4: '利用者視点に立った包括的なサービス設計ができる',
+                            3: '具体的なサービス内容と実現方法を提案できる',
+                            2: 'アイデアレベルではある',
+                            1: '構想したことがない'
+                        }
+                    },
+                    {
+                        text: '既存の住民サービスをデジタル技術で改善できますか？',
+                        criteria: {
+                            5: 'データ分析に基づく科学的なアプローチで改善を推進できる',
+                            4: '利用者の声を取り入れた継続的な改善を行える',
+                            3: '具体的な改善策を提案・実施できる',
+                            2: '改善の必要性は認識している',
+                            1: '改善の視点を持っていない'
+                        }
+                    }
+                ]
+            },
+            'general-staff': {
+                categories: ['デジタルリテラシー', '業務プロセス理解', 'デジタル環境での業務遂行', 'データ活用', 'セキュリティ意識'],
+                questions: [
+                    {
+                        text: '行政で利用される基本的なデジタルツール（Word, Excel, メール等）を使いこなせますか？',
+                        criteria: {
+                            5: 'マクロや関数など高度な機能も活用している',
+                            4: '応用機能も活用して効率的に業務を進められる',
+                            3: '日常業務に必要な操作はスムーズにできる',
+                            2: '基本操作はできるが効率的でない',
+                            1: '基本操作に不安がある'
+                        }
+                    },
+                    {
+                        text: '新しいデジタルツールの操作方法を学ぶ意欲と能力がありますか？',
+                        criteria: {
+                            5: '常に新しい技術やツールの情報を収集し、試している',
+                            4: '自主的に学習し、周囲にも共有している',
+                            3: '積極的に学んで業務に活用している',
+                            2: '必要に迫られれば学ぶ',
+                            1: '新しいツールには抵抗がある'
+                        }
+                    },
+                    {
+                        text: '担当業務のフローやマニュアルを作成・更新できますか？',
+                        criteria: {
+                            5: '業務の効率化を意識した標準化されたマニュアルを整備している',
+                            4: '例外処理も含めた包括的なマニュアルを作成・更新できる',
+                            3: 'わかりやすい業務フロー図やマニュアルを作成できる',
+                            2: '簡単な作業メモ程度は作成できる',
+                            1: '作成したことがない'
+                        }
+                    },
+                    {
+                        text: '担当業務の課題を把握し、改善案を考えられますか？',
+                        criteria: {
+                            5: '継続的な業務改善のサイクルを回している',
+                            4: '改善案の効果と実現可能性を評価できる',
+                            3: '具体的な改善案を提案できる',
+                            2: '課題は認識しているが改善策は考えていない',
+                            1: '現状維持で問題意識はない'
+                        }
+                    },
+                    {
+                        text: '紙とデジタルが混在する環境でも正確に業務を実施できますか？',
+                        criteria: {
+                            5: '混在環境での最適な処理方法を考案し、実践している',
+                            4: '紙・デジタル双方の特性を理解し適切に処理できる',
+                            3: '効率は落ちるが正確に業務をこなせる',
+                            2: '基本的な作業はこなせる',
+                            1: '混乱することが多い'
+                        }
+                    },
+                    {
+                        text: 'オンライン会議や共同編集などのコラボレーションツールを活用できますか？',
+                        criteria: {
+                            5: 'ツールの特性を理解し、目的に応じた使い分けができる',
+                            4: '会議の設定や資料共有など主導的に使用できる',
+                            3: '能動的に参加・貢献できる',
+                            2: '基本的な参加・閲覧はできる',
+                            1: 'ほとんど使用したことがない'
+                        }
+                    },
+                    {
+                        text: '業務データを収集・整理・分析できますか？',
+                        criteria: {
+                            5: '複数のデータソースを組み合わせた総合的な分析ができる',
+                            4: 'データから傾向や課題を読み取り、対策を検討できる',
+                            3: '目的に応じたデータ分析ができる',
+                            2: '基本的なデータ収集と整理ができる',
+                            1: 'データ活用の経験がない'
+                        }
+                    },
+                    {
+                        text: 'データに基づいた意思決定や業務改善を行えますか？',
+                        criteria: {
+                            5: '予測分析も含めた高度なデータ活用を行っている',
+                            4: 'データに基づく仮説検証のサイクルを回している',
+                            3: 'データを意思決定の重要な要素として活用している',
+                            2: 'データは参考程度に見ている',
+                            1: '経験と勘に頼っている'
+                        }
+                    },
+                    {
+                        text: '情報セキュリティの基本原則を理解し、実践していますか？',
+                        criteria: {
+                            5: '周囲にもセキュリティ意識を広める活動をしている',
+                            4: 'リスクを予測し、積極的に対策を講じている',
+                            3: '組織のセキュリティポリシーを理解し遵守している',
+                            2: '基本的なルールは知っているが実践は不十分',
+                            1: 'セキュリティに対する意識は低い'
+                        }
+                    },
+                    {
+                        text: 'デジタル環境でのインシデント対応を理解していますか？',
+                        criteria: {
+                            5: '予防措置も含めた包括的な対応ができる',
+                            4: 'インシデント対応の全体フローを把握している',
+                            3: '初期対応の手順を理解している',
+                            2: '報告すべき相手は知っている',
+                            1: '対応方法を知らない'
+                        }
+                    }
+                ]
+            },
+            'expert': {
+                categories: ['専門技術知識', 'システム設計・開発', '技術的助言・指導', '高度サービス設計', '事業戦略・ガバナンス'],
+                questions: [
+                    {
+                        text: '最新のデジタル技術動向を把握していますか？',
+                        criteria: {
+                            5: '最先端の研究動向も含めた包括的な知識を持っている',
+                            4: '技術の進化や応用可能性について深く理解している',
+                            3: '定期的に情報収集し、主要な動向を把握している',
+                            2: '一部のニュースや記事は目にしている',
+                            1: 'ほとんど把握していない'
+                        }
+                    },
+                    {
+                        text: '自治体業務に関連する技術要素を理解していますか？',
+                        criteria: {
+                            5: '自治体DXの技術的課題と解決策を体系的に理解している',
+                            4: '自治体システム間の連携や標準化の知識がある',
+                            3: '主要な自治体システムの技術要件を把握している',
+                            2: '基本的な自治体システム構成は理解している',
+                            1: '自治体特有の技術要件を理解していない'
+                        }
+                    },
+                    {
+                        text: '業務要件を技術要件に変換できますか？',
+                        criteria: {
+                            5: 'ステークホルダー間の調整も含めた包括的な要件定義ができる',
+                            4: '複雑な業務要件も体系的に整理し技術要件に変換できる',
+                            3: '機能・非機能要件を適切に定義できる',
+                            2: '基本的な機能要件は定義できる',
+                            1: '要件定義の経験がない'
+                        }
+                    },
+                    {
+                        text: 'システム設計・開発プロジェクトを管理できますか？',
+                        criteria: {
+                            5: '複数プロジェクトのポートフォリオマネジメントができる',
+                            4: '複雑な開発プロジェクトを効果的に管理できる',
+                            3: '小規模なプロジェクトのマネジメント経験がある',
+                            2: 'メンバーとしての参加経験はある',
+                            1: 'プロジェクト管理の経験がない'
+                        }
+                    },
+                    {
+                        text: '非IT部門に対して技術的な助言ができますか？',
+                        criteria: {
+                            5: '技術と業務の橋渡し役として効果的な助言ができる',
+                            4: '複雑な技術概念も平易に説明し理解を促せる',
+                            3: '相手の理解レベルに合わせた説明ができる',
+                            2: '基本的な説明はできる',
+                            1: '技術的な説明が苦手である'
+                        }
+                    },
+                    {
+                        text: 'IT関連の調達や外部委託の仕様を策定できますか？',
+                        criteria: {
+                            5: 'ベンダーロックインを防ぐ戦略的な調達仕様を策定できる',
+                            4: '評価基準や非機能要件も含めた包括的な仕様を策定できる',
+                            3: '必要な仕様を過不足なく記述できる',
+                            2: 'テンプレートに従って基本的な仕様は作成できる',
+                            1: '仕様策定の経験がない'
+                        }
+                    },
+                    {
+                        text: 'デジタル技術を活用した革新的な行政サービスを構想できますか？',
+                        criteria: {
+                            5: '複数の先端技術を組み合わせた次世代サービスを構想できる',
+                            4: '技術の特性を活かした革新的なサービスを設計できる',
+                            3: '新しい視点でのサービス構想ができる',
+                            2: '既存サービスの改善程度は考えられる',
+                            1: '構想経験がない'
+                        }
+                    },
+                    {
+                        text: 'サービスの社会的・経済的影響を評価できますか？',
+                        criteria: {
+                            5: '科学的なアプローチで精緻な影響評価と予測ができる',
+                            4: '長期的な社会的影響も含めた包括的な評価ができる',
+                            3: '定量的・定性的な効果を体系的に評価できる',
+                            2: '基本的な費用対効果は検討できる',
+                            1: '評価の視点を持っていない'
+                        }
+                    },
+                    {
+                        text: 'デジタル技術を活用した事業化計画を立案できますか？',
+                        criteria: {
+                            5: '複数シナリオを想定した戦略的な事業計画を策定できる',
+                            4: 'ステークホルダー分析や環境分析を含めた包括的な計画を立案できる',
+                            3: '実現可能な事業計画を策定できる',
+                            2: '基本的な事業計画の概要は理解している',
+                            1: '事業計画の経験がない'
+                        }
+                    },
+                    {
+                        text: 'デジタルガバナンスの枠組みを設計・運用できますか？',
+                        criteria: {
+                            5: '組織文化や風土も考慮した持続可能なガバナンス体制を実現できる',
+                            4: '効果的なガバナンス体制を構築・運用できる',
+                            3: '組織に適したガバナンス体制を提案できる',
+                            2: '基本的な概念は理解している',
+                            1: 'ガバナンスの概念理解が不十分'
+                        }
+                    }
+                ]
+            }
+        };
+
+        // 評価基準表示
+        function showCriteria(personType, questionIndex) {
+            const criteria = detailedEvaluationCriteria[personType].questions[questionIndex];
+            
+            const modal = document.createElement('div');
+            modal.className = 'criteria-modal';
+            modal.innerHTML = `
+                <div class="criteria-content">
+                    <h3 class="text-xl font-bold mb-4">評価基準</h3>
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 mb-2">${criteria.text}</p>
+                    </div>
+                    ${[5, 4, 3, 2, 1].map(score => `
+                        <div class="criteria-item criteria-${score}">
+                            <div class="font-bold">レベル${score}</div>
+                            <div class="text-sm mt-1">${criteria.criteria[score]}</div>
+                        </div>
+                    `).join('')}
+                    <div class="text-center mt-6">
+                        <button onclick="closeCriteriaModal()" class="btn-primary">閉じる</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function closeCriteriaModal() {
+            const modal = document.querySelector('.criteria-modal');
+            if (modal) modal.remove();
+        }
+
+        // 評価項目HTML生成
+        function generateScoreInputsHTML(personType, scores = null, isEdit = false) {
+            const config = detailedEvaluationCriteria[personType];
+            const colors = ['blue', 'green', 'purple', 'orange', 'red'];
+            const prefix = isEdit ? 'edit' : 'new';
+            
+            let html = '<div class="space-y-4">';
+            
+            for (let i = 0; i < 5; i++) {
+                const categoryName = config.categories[i];
+                const colorClass = `category-${colors[i]}`;
+                
+                html += `
+                    <div class="category-section ${colorClass}">
+                        <h6 class="font-bold text-gray-800 mb-3">${i + 1}. ${categoryName}</h6>
+                        <div class="space-y-3">
+                `;
+                
+                for (let j = 0; j < 2; j++) {
+                    const questionIndex = i * 2 + j;
+                    const question = config.questions[questionIndex];
+                    const value = scores ? scores[questionIndex] : 3;
+                    
+                    html += `
+                        <div class="question-item">
+                            <div class="question-label">${question.text}</div>
+                            <div class="flex gap-2 items-center">
+                                <input type="number" min="1" max="5" id="${prefix}Score${questionIndex}" 
+                                       class="score-input" value="${value}" style="width: 80px;">
+                                <button onclick="showCriteria('${personType}', ${questionIndex})" 
+                                        class="btn-secondary btn-small">
+                                    <i class="fas fa-info-circle"></i> 基準表示
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += '</div></div>';
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 人材類型変更時の評価項目更新
+        function updateModalScoreInputs(isEdit = false) {
+            const selectId = isEdit ? 'editPersonType' : 'newPersonType';
+            const containerId = isEdit ? 'editScoreInputsContainer' : 'scoreInputsContainer';
+            
+            const personType = document.getElementById(selectId).value;
+            const container = document.getElementById(containerId);
+            
+            if (container) {
+                container.innerHTML = generateScoreInputsHTML(personType, null, isEdit);
+            }
+        }
+
+        // メンバー追加モーダル表示
+        function showAddMemberModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'addMemberModal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 class="text-xl font-bold mb-4">新規メンバー追加</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">個人ID</label>
+                            <input type="text" id="personId" class="form-input" placeholder="P001">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">部署</label>
+                            <input type="text" id="department" class="form-input" placeholder="総務課">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">役職</label>
+                            <input type="text" id="position" class="form-input" placeholder="課長">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">人材類型</label>
+                            <select id="newPersonType" class="form-input" onchange="updateModalScoreInputs(false)">
+                                <option value="dx-leader">DX推進リーダー</option>
+                                <option value="general-staff">一般行政職員</option>
+                                <option value="expert">高度専門人材</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">評価スコア（1-5段階）</label>
+                            <div id="scoreInputsContainer">
+                                ${generateScoreInputsHTML('dx-leader', null, false)}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mt-6">
+                        <button onclick="saveMember()" class="btn-primary">保存</button>
+                        <button onclick="closeModal()" class="btn-secondary">キャンセル</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // メンバー保存
+        function saveMember() {
+            const personId = document.getElementById('personId').value;
+            const department = document.getElementById('department').value;
+            const position = document.getElementById('position').value;
+            const personType = document.getElementById('newPersonType').value;
+
+            if (!personId || !department || !position) {
+                alert('必須項目を入力してください');
+                return;
+            }
+
+            const scores = [];
+            for (let i = 0; i < 10; i++) {
+                const scoreElement = document.getElementById(`newScore${i}`);
+                if (scoreElement) {
+                    const score = parseInt(scoreElement.value) || 3;
+                    scores.push(Math.max(1, Math.min(5, score)));
+                } else {
+                    scores.push(3);
+                }
+            }
+
+            const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+
+            const newMember = {
+                personId,
+                department,
+                position,
+                personType,
+                scores,
+                averageScore: parseFloat(averageScore.toFixed(1))
+            };
+
+            teamMembers.push(newMember);
+            updateMemberList();
+            closeModal();
+            alert(`メンバー「${personId}」を追加しました`);
+        }
+
+        // モーダル閉じる
+        function closeModal() {
+            const modal = document.getElementById('addMemberModal');
+            if (modal) modal.remove();
+        }
+
+        // メンバーリスト更新
+        function updateMemberList() {
+            const container = document.getElementById('memberList');
+            
+            if (teamMembers.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">メンバーを追加してください</p>';
+                return;
+            }
+
+            let html = '<h4 class="font-bold mb-4">登録メンバー一覧</h4>';
+            teamMembers.forEach((member, index) => {
+                html += `
+                    <div class="member-item">
+                        <div>
+                            <span class="font-bold text-blue-600">${member.personId}</span> - 
+                            ${member.department} - ${member.position} - 
+                            ${getPersonTypeDisplay(member.personType)}
+                            <div class="text-sm text-gray-600">平均スコア: ${member.averageScore}</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="editMember(${index})" class="text-blue-600 hover:text-blue-800 px-2 py-1">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteMember(${index})" class="text-red-600 hover:text-red-800 px-2 py-1">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // 人材類型表示名
+        function getPersonTypeDisplay(type) {
+            const types = {
+                'dx-leader': 'DX推進リーダー',
+                'general-staff': '一般行政職員',
+                'expert': '高度専門人材'
+            };
+            return types[type] || type;
+        }
+
+        // メンバー編集
+        function editMember(index) {
+            const member = teamMembers[index];
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'editMemberModal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 class="text-xl font-bold mb-4">メンバー編集</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">個人ID</label>
+                            <input type="text" id="editPersonId" class="form-input" value="${member.personId}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">部署</label>
+                            <input type="text" id="editDepartment" class="form-input" value="${member.department}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">役職</label>
+                            <input type="text" id="editPosition" class="form-input" value="${member.position}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">人材類型</label>
+                            <select id="editPersonType" class="form-input" onchange="updateModalScoreInputs(true)">
+                                <option value="dx-leader" ${member.personType === 'dx-leader' ? 'selected' : ''}>DX推進リーダー</option>
+                                <option value="general-staff" ${member.personType === 'general-staff' ? 'selected' : ''}>一般行政職員</option>
+                                <option value="expert" ${member.personType === 'expert' ? 'selected' : ''}>高度専門人材</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">評価スコア（1-5段階）</label>
+                            <div id="editScoreInputsContainer">
+                                ${generateScoreInputsHTML(member.personType, member.scores, true)}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mt-6">
+                        <button onclick="saveEditedMember(${index})" class="btn-primary">保存</button>
+                        <button onclick="closeEditModal()" class="btn-secondary">キャンセル</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // 編集メンバー保存
+        function saveEditedMember(index) {
+            const personId = document.getElementById('editPersonId').value;
+            const department = document.getElementById('editDepartment').value;
+            const position = document.getElementById('editPosition').value;
+            const personType = document.getElementById('editPersonType').value;
+
+            if (!personId || !department || !position) {
+                alert('必須項目を入力してください');
+                return;
+            }
+
+            const scores = [];
+            for (let i = 0; i < 10; i++) {
+                const score = parseInt(document.getElementById(`editScore${i}`).value) || 3;
+                scores.push(Math.max(1, Math.min(5, score)));
+            }
+
+            const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+
+            teamMembers[index] = {
+                personId,
+                department,
+                position,
+                personType,
+                scores,
+                averageScore: parseFloat(averageScore.toFixed(1))
+            };
+
+            updateMemberList();
+            closeEditModal();
+        }
+
+        // 編集モーダル閉じる
+        function closeEditModal() {
+            const modal = document.getElementById('editMemberModal');
+            if (modal) modal.remove();
+        }
+
+        function deleteMember(index) {
+            if (confirm('このメンバーを削除しますか？')) {
+                teamMembers.splice(index, 1);
+                updateMemberList();
+            }
+        }
+
+        // CSVインポート
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                alert('ファイルが選択されていません');
+                return;
+            }
+
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                alert('CSVファイルを選択してください');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n').filter(line => line.trim());
+                    
+                    if (lines.length < 2) {
+                        alert('CSVファイルにデータが含まれていません');
+                        return;
+                    }
+
+                    let importCount = 0;
+                    const errors = [];
+
+                    for (let i = 1; i < lines.length; i++) {
+                        try {
+                            const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                            
+                            if (values.length >= 14) {
+                                const scores = [];
+                                for (let j = 4; j < 14; j++) {
+                                    scores.push(Math.max(1, Math.min(5, parseInt(values[j]) || 3)));
+                                }
+                                
+                                const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+                                
+                                teamMembers.push({
+                                    personId: values[0] || `P${Date.now()}`,
+                                    department: values[1] || '未設定',
+                                    position: values[2] || '未設定',
+                                    personType: normalizePersonType(values[3]),
+                                    scores,
+                                    averageScore: parseFloat(averageScore.toFixed(1))
+                                });
+                                importCount++;
+                            } else {
+                                errors.push(`行${i + 1}: データが不足しています`);
+                            }
+                        } catch (error) {
+                            errors.push(`行${i + 1}: ${error.message}`);
+                        }
+                    }
+
+                    updateMemberList();
+                    
+                    let message = `${importCount}名のメンバーをインポートしました`;
+                    if (errors.length > 0) {
+                        message += `\n\n警告:\n${errors.slice(0, 5).join('\n')}`;
+                        if (errors.length > 5) {
+                            message += `\n...他${errors.length - 5}件`;
+                        }
+                    }
+                    
+                    alert(message);
+
+                } catch (error) {
+                    alert(`CSVファイルの読み込みでエラーが発生しました: ${error.message}`);
+                }
+            };
+            
+            reader.onerror = function() {
+                alert('ファイルの読み込みに失敗しました');
+            };
+            
+            reader.readAsText(file, 'UTF-8');
+            event.target.value = '';
+        }
+
+        // 人材類型正規化
+        function normalizePersonType(typeText) {
+            if (!typeText) return 'general-staff';
+            const typeStr = typeText.toString().toLowerCase();
+            if (typeStr.includes('dx') || typeStr.includes('リーダー')) return 'dx-leader';
+            if (typeStr.includes('専門') || typeStr.includes('expert')) return 'expert';
+            return 'general-staff';
+        }
+
+        // CSVテンプレートダウンロード
+        function downloadTemplate() {
+            let csv = '\uFEFF';
+            
+            csv += '個人ID,部署,役職,人材類型,';
+            csv += 'デジタル基礎知識1,デジタル基礎知識2,';
+            csv += '業務課題把握1,業務課題把握2,';
+            csv += '組織連携1,組織連携2,';
+            csv += 'ツール活用1,ツール活用2,';
+            csv += 'サービス創出1,サービス創出2\n';
+            
+            csv += 'P001,総務課,課長,DX推進リーダー,4,4,3,3,2,3,4,3,3,4\n';
+            csv += 'P002,市民課,係長,一般行政職員,3,2,3,2,3,3,2,3,2,3\n';
+            csv += 'P003,情報政策課,主任,高度専門人材,4,5,4,4,3,4,5,4,4,5\n';
+            csv += 'P004,企画課,主事,DX推進リーダー,3,3,4,3,3,4,3,4,3,3\n';
+            csv += 'P005,税務課,主事,一般行政職員,2,3,2,3,2,2,3,2,2,3\n';
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `メンバーインポートテンプレート_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            URL.revokeObjectURL(url);
+            alert('テンプレートファイルをダウンロードしました');
+        }
+
+        // 組織分析実行
+        function analyzeOrganization() {
+            if (teamMembers.length === 0) {
+                alert('メンバーを追加してから分析を実行してください');
+                return;
+            }
+
+            const stats = calculateStatistics();
+            const level = determineOrganizationLevel(stats);
+            const balance = evaluateBalance(stats);
+            const individual = analyzeIndividualMembers(stats);
+
+            analysisData = { stats, level, balance, individual };
+
+            displayResults(analysisData);
+            document.getElementById('analysisResults').style.display = 'block';
+        }
+
+        // 統計計算
+        function calculateStatistics() {
+            const typeStats = {
+                'dx-leader': { members: [], count: 0, total: 0, average: 0 },
+                'general-staff': { members: [], count: 0, total: 0, average: 0 },
+                'expert': { members: [], count: 0, total: 0, average: 0 }
+            };
+
+            teamMembers.forEach(member => {
+                const type = member.personType;
+                if (typeStats[type]) {
+                    typeStats[type].members.push(member);
+                    typeStats[type].count++;
+                    typeStats[type].total += member.averageScore;
+                }
+            });
+
+            Object.keys(typeStats).forEach(type => {
+                if (typeStats[type].count > 0) {
+                    typeStats[type].average = typeStats[type].total / typeStats[type].count;
+                }
+            });
+
+            const allScores = teamMembers.flatMap(member => member.scores);
+            const organizationAverage = allScores.reduce((sum, score) => sum + score, 0) / allScores.length;
+            const organizationStdDev = calculateStandardDeviation(allScores);
+
+            const categoryAverages = [];
+            for (let i = 0; i < 5; i++) {
+                const categoryScores = [];
+                teamMembers.forEach(member => {
+                    categoryScores.push((member.scores[i * 2] + member.scores[i * 2 + 1]) / 2);
+                });
+                categoryAverages.push(categoryScores.reduce((sum, score) => sum + score, 0) / categoryScores.length);
+            }
+
+            return {
+                typeStats,
+                organizationAverage,
+                organizationStdDev,
+                categoryAverages,
+                totalMembers: teamMembers.length
+            };
+        }
+
+        // 標準偏差計算
+        function calculateStandardDeviation(values) {
+            if (values.length <= 1) return 0;
+            
+            const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+            const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+            
+            return Math.sqrt(variance);
+        }
+
+        // 組織レベル判定
+        function determineOrganizationLevel(stats) {
+            const { organizationAverage, organizationStdDev, typeStats } = stats;
+            
+            const experts = typeStats['expert'].members;
+            const hasExpert = experts.length > 0;
+            
+            let baseLevel = 1;
+            let baseDescription = '属人的対応にとどまっている';
+            let baseReason = '';
+            
+            const dxLeaders = typeStats['dx-leader'].members;
+            for (let leader of dxLeaders) {
+                if (leader.scores[4] <= 2) {
+                    baseLevel = 1;
+                    baseDescription = '属人的対応にとどまっている';
+                    baseReason = `DX推進リーダー(${leader.personId})の関係者調整・合意形成能力が低いため(スコア:${leader.scores[4]})`;
+                    
+                    if (hasExpert) {
+                        return {
+                            level: 2,
+                            description: '業務課題の把握・改善案の提案が可能',
+                            reason: `${baseReason}、本来はレベル1ですが、高度専門人材(${experts.length}名)の存在により1ランク上げてレベル2に設定`,
+                            expertBonus: true
+                        };
+                    }
+                    
+                    return {
+                        level: baseLevel,
+                        description: baseDescription,
+                        reason: baseReason + '、組織レベル1と判定されました',
+                        specialRule: true
+                    };
+                }
+            }
+            
+            if (organizationStdDev > 0.3) {
+                baseLevel = 1;
+                baseDescription = '属人的対応にとどまっている';
+                baseReason = `組織全体の標準偏差(${organizationStdDev.toFixed(2)})が0.3を超えており、属人的対応の傾向が見られます`;
+                
+                if (hasExpert) {
+                    return {
+                        level: 2,
+                        description: '業務課題の把握・改善案の提案が可能',
+                        reason: `${baseReason}、本来はレベル1ですが、高度専門人材(${experts.length}名)の存在により1ランク上げてレベル2に設定`,
+                        expertBonus: true
+                    };
+                }
+                
+                return {
+                    level: baseLevel,
+                    description: baseDescription,
+                    reason: baseReason
+                };
+            }
+            
+            baseLevel = getBaseLevelByAverage(organizationAverage);
+            baseDescription = getOrganizationLevelDescription(baseLevel);
+            baseReason = `組織全体の平均スコア(${organizationAverage.toFixed(1)})に基づく判定`;
+            
+            if (hasExpert) {
+                const finalLevel = Math.min(5, baseLevel + 1);
+                return {
+                    level: finalLevel,
+                    description: getOrganizationLevelDescription(finalLevel),
+                    reason: `${baseReason}、本来はレベル${baseLevel}ですが、高度専門人材(${experts.length}名)の存在により1ランク上げてレベル${finalLevel}に設定`,
+                    expertBonus: true
+                };
+            }
+            
+            return {
+                level: baseLevel,
+                description: baseDescription,
+                reason: baseReason
+            };
+        }
+
+        // 基礎レベル取得
+        function getBaseLevelByAverage(average) {
+            if (average >= 4.0) return 5;
+            if (average >= 3.5) return 4;
+            if (average >= 3.0) return 3;
+            if (average >= 2.5) return 2;
+            return 1;
+        }
+
+        // 組織レベル説明
+        function getOrganizationLevelDescription(level) {
+            const descriptions = {
+                1: '属人的対応にとどまっている',
+                2: '業務課題の把握・改善案の提案が可能',
+                3: 'デジタルによる業務改善ができている',
+                4: 'BPRを基に新たなデジタルサービスの開始が可能',
+                5: '継続的なサービスの見直しができている'
+            };
+            return descriptions[level] || descriptions[1];
+        }
+
+        // バランス評価
+        function evaluateBalance(stats) {
+            const { typeStats, organizationStdDev } = stats;
+            
+            if (teamMembers.length === 1) {
+                return {
+                    type: 'single-member',
+                    message: 'メンバーが1名のため、バランス評価は実施せず、スキル判定のみを行います'
+                };
+            }
+            
+            const dxLeaderAvg = typeStats['dx-leader'].average || 0;
+            const generalStaffAvg = typeStats['general-staff'].average || 0;
+            const expertAvg = typeStats['expert'].average || 0;
+            const skillGap = Math.abs(dxLeaderAvg - generalStaffAvg);
+            
+            const balancedConditions = [
+                skillGap <= 0.8,
+                dxLeaderAvg >= 3.5,
+                generalStaffAvg >= 3.2,
+                organizationStdDev <= 0.25,
+                (typeStats['dx-leader'].count > 0 && typeStats['general-staff'].count > 0)
+            ];
+            
+            if (skillGap >= 1.5) {
+                if (dxLeaderAvg > generalStaffAvg) {
+                    return {
+                        type: 'leader-heavy',
+                        message: 'リーダー頼み型：DX推進リーダーのスキルが高く、一般行政職員との差が大きい状況',
+                        recommendation: '一般行政職員のスキル向上支援が必要'
+                    };
+                } else {
+                    return {
+                        type: 'staff-struggle',
+                        message: '職員孤軍奮闘型：一般行政職員が高いスキルを持ちながら、リーダーとの連携に課題',
+                        recommendation: 'DX推進リーダーの能力強化支援が必要'
+                    };
+                }
+            } else if (dxLeaderAvg < 3.0 && generalStaffAvg < 3.0) {
+                return {
+                    type: 'overall-improvement',
+                    message: '全体底上げ必要型：組織全体のスキルレベル向上が必要',
+                    recommendation: '組織全体の基礎スキル向上支援が必要'
+                };
+            } else if (balancedConditions.every(condition => condition)) {
+                return {
+                    type: 'balanced',
+                    message: `バランス良好：人材類型間のスキルバランスが適切に保たれています（DXリーダー${dxLeaderAvg.toFixed(1)}、一般職員${generalStaffAvg.toFixed(1)}、スキル差${skillGap.toFixed(1)}、標準偏差${organizationStdDev.toFixed(2)}）`
+                };
+            } else {
+                const failedConditions = [];
+                if (skillGap > 0.8) failedConditions.push(`スキル差が大きい（${skillGap.toFixed(1)}）`);
+                if (dxLeaderAvg < 3.5) failedConditions.push(`DXリーダーのスキル不足（${dxLeaderAvg.toFixed(1)}）`);
+                if (generalStaffAvg < 3.2) failedConditions.push(`一般職員のスキル不足（${generalStaffAvg.toFixed(1)}）`);
+                if (organizationStdDev > 0.25) failedConditions.push(`スキルのばらつきが大きい（${organizationStdDev.toFixed(2)}）`);
+                
+                return {
+                    type: 'improvement-needed',
+                    message: `バランス改善必要：${failedConditions.join('、')}のため、更なる改善が必要です`,
+                    recommendation: 'スキル基準の達成と組織内格差の是正が必要'
+                };
+            }
+        }
+
+        // 個人別分析
+        function analyzeIndividualMembers(stats) {
+            const analyses = [];
+            
+            teamMembers.forEach(member => {
+                const categoryScores = [];
+                for (let i = 0; i < 5; i++) {
+                    categoryScores.push((member.scores[i * 2] + member.scores[i * 2 + 1]) / 2);
+                }
+                
+                const maxScore = Math.max(...categoryScores);
+                const minScore = Math.min(...categoryScores);
+                const maxIndex = categoryScores.indexOf(maxScore);
+                const minIndex = categoryScores.indexOf(minScore);
+                
+                const categoryNames = detailedEvaluationCriteria[member.personType].categories;
+                
+                const analysis = {
+                    member: member,
+                    categoryScores: categoryScores,
+                    strength: {
+                        category: categoryNames[maxIndex],
+                        score: maxScore.toFixed(1)
+                    },
+                    weakness: {
+                        category: categoryNames[minIndex],
+                        score: minScore.toFixed(1)
+                    },
+                    balance: maxScore - minScore,
+                    recommendations: generateIndividualRecommendations(member, categoryScores, categoryNames)
+                };
+                
+                analyses.push(analysis);
+            });
+            
+            return analyses;
+        }
+
+        // 個人別推奨改善案
+        function generateIndividualRecommendations(member, categoryScores, categoryNames) {
+            const recommendations = [];
+            
+            categoryScores.forEach((score, index) => {
+                if (score < 3.0) {
+                    recommendations.push({
+                        category: categoryNames[index],
+                        priority: 'high',
+                        action: getRecommendationAction(member.personType, index, score)
+                    });
+                } else if (score < 3.5) {
+                    recommendations.push({
+                        category: categoryNames[index],
+                        priority: 'medium',
+                        action: getRecommendationAction(member.personType, index, score)
+                    });
+                }
+            });
+            
+            return recommendations;
+        }
+
+        // 推奨アクション取得
+        function getRecommendationAction(personType, categoryIndex, score) {
+            const actions = {
+                'dx-leader': [
+                    '最新技術動向に関する研修受講',
+                    '業務分析・改善手法の習得',
+                    'リーダーシップ研修への参加',
+                    'デジタルツール導入プロジェクトへの参加',
+                    '住民サービス設計ワークショップの実施'
+                ],
+                'general-staff': [
+                    'デジタルリテラシー向上研修',
+                    '業務プロセス改善研修',
+                    'デジタル環境適応トレーニング',
+                    'データ分析スキル向上研修',
+                    'セキュリティ意識向上研修'
+                ],
+                'expert': [
+                    '技術動向調査とスキル更新',
+                    'プロジェクト管理手法の習得',
+                    'コミュニケーション能力向上研修',
+                    'サービス設計思考の習得',
+                    'ガバナンス設計研修'
+                ]
+            };
+            
+            return actions[personType][categoryIndex] || '継続的なスキル向上';
+        }
+
+        // 結果表示
+        function displayResults(data) {
+            const { stats, level, balance, individual } = data;
+
+            displayOrganizationStats(stats);
+            displayOrganizationLevel(level, balance);
+            createRadarChart(stats);
+            displayIndividualAnalysis(individual);
+            displayAIAnalysis(data);
+            displayImprovementPlans(data);
+        }
+
+        // 組織統計表示
+        function displayOrganizationStats(stats) {
+            let statsHtml = `
+                <h4 class="font-bold mb-4">組織統計情報</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="stat-card">
+                        <h5 class="font-bold text-blue-600">DX推進リーダー</h5>
+                        <p class="text-2xl font-bold">${stats.typeStats['dx-leader'].count}名</p>
+                        <p class="text-sm text-gray-600">平均: ${stats.typeStats['dx-leader'].average.toFixed(1)}</p>
+                    </div>
+                    <div class="stat-card">
+                        <h5 class="font-bold text-green-600">一般行政職員</h5>
+                        <p class="text-2xl font-bold">${stats.typeStats['general-staff'].count}名</p>
+                        <p class="text-sm text-gray-600">平均: ${stats.typeStats['general-staff'].average.toFixed(1)}</p>
+                    </div>
+                    <div class="stat-card">
+                        <h5 class="font-bold text-purple-600">高度専門人材</h5>
+                        <p class="text-2xl font-bold">${stats.typeStats['expert'].count}名</p>
+                        <p class="text-sm text-gray-600">平均: ${stats.typeStats['expert'].average.toFixed(1)}</p>
+                    </div>
+                </div>
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div>
+                            <p class="text-sm text-gray-600">組織全体平均</p>
+                            <p class="text-2xl font-bold text-blue-600">${stats.organizationAverage.toFixed(1)}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">標準偏差</p>
+                            <p class="text-2xl font-bold ${stats.organizationStdDev > 0.3 ? 'text-red-600' : 'text-green-600'}">${stats.organizationStdDev.toFixed(2)}</p>
+                            ${stats.organizationStdDev > 0.3 ? '<p class="text-xs text-red-600">属人化傾向</p>' : '<p class="text-xs text-green-600">バランス良好</p>'}
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">総メンバー数</p>
+                            <p class="text-2xl font-bold text-green-600">${stats.totalMembers}名</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('organizationStats').innerHTML = statsHtml;
+        }
+
+        // 組織レベル表示
+        function displayOrganizationLevel(level, balance) {
+            let levelHtml = `
+                <h4 class="font-bold mb-4">組織レベル評価</h4>
+                <div class="text-center p-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg mb-4">
+                    <div class="text-3xl font-bold">レベル ${level.level}</div>
+                    <div class="text-lg">${level.description}</div>
+                </div>
+                <div class="p-4 bg-blue-50 rounded-lg mb-4">
+                    <h5 class="font-bold mb-2">判定理由</h5>
+                    <p>${level.reason}</p>
+                </div>
+                <div class="p-4 bg-green-50 rounded-lg">
+                    <h5 class="font-bold mb-2">バランス評価</h5>
+                    <p>${balance.message}</p>
+                </div>
+            `;
+            document.getElementById('organizationLevel').innerHTML = levelHtml;
+        }
+
+        // 個人別分析表示
+        function displayIndividualAnalysis(individual) {
+            let html = `
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-user-check mr-2"></i>個人別詳細分析
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            `;
+            
+            individual.forEach(analysis => {
+                html += `
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h5 class="font-bold text-lg mb-3">${analysis.member.personId} (${analysis.member.department})</h5>
+                        <div class="space-y-2">
+                            <div class="text-sm">
+                                <span class="font-semibold text-green-600">最強領域:</span> 
+                                ${analysis.strength.category} (${analysis.strength.score})
+                            </div>
+                            <div class="text-sm">
+                                <span class="font-semibold text-red-600">改善領域:</span> 
+                                ${analysis.weakness.category} (${analysis.weakness.score})
+                            </div>
+                            <div class="text-sm">
+                                <span class="font-semibold text-blue-600">スキルバランス:</span> 
+                                ${analysis.balance.toFixed(1)} (${analysis.balance < 1.0 ? 'バランス良好' : 'ばらつき大'})
+                            </div>
+                            <div class="text-sm">
+                                <span class="font-semibold text-purple-600">推奨アクション:</span>
+                                <ul class="list-disc list-inside mt-1 text-xs">
+                                    ${analysis.recommendations.slice(0, 3).map(rec => 
+                                        `<li class="text-${rec.priority === 'high' ? 'red' : 'orange'}-600">${rec.action}</li>`
+                                    ).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('individualAnalysis').innerHTML = html;
+        }
+
+        // 改善計画表示
+        function displayImprovementPlans(data) {
+            const { stats, level, balance, individual } = data;
+            
+            let html = `
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-tasks mr-2"></i>改善計画・推奨アクション
+                    </div>
+                    <div class="p-6">
+            `;
+            
+            // 優先度別改善計画
+            const highPriority = [];
+            const mediumPriority = [];
+            const lowPriority = [];
+            
+            // 組織レベル別改善提案
+            if (level.level < 3) {
+                highPriority.push({
+                    title: '基礎スキル向上',
+                    description: '組織全体のデジタルリテラシー底上げ',
+                    actions: [
+                        'デジタルツール基礎研修の実施',
+                        '業務プロセス改善ワークショップの開催',
+                        'メンターシップ制度の導入'
+                    ]
+                });
+            }
+            
+            if (stats.organizationStdDev > 0.3) {
+                highPriority.push({
+                    title: '組織内格差是正',
+                    description: 'スキルのばらつきを減らし、チーム力向上',
+                    actions: [
+                        '職員間のスキル共有会の実施',
+                        'ペアワーク・チームワークの推進',
+                        '標準化されたマニュアル・手順書の整備'
+                    ]
+                });
+            }
+            
+            // バランス評価に基づく改善提案
+            if (balance.type === 'leader-heavy') {
+                mediumPriority.push({
+                    title: '一般職員スキル強化',
+                    description: 'DXリーダーとの格差解消',
+                    actions: [
+                        '一般職員向け集中研修プログラム',
+                        'DXリーダーによる内部指導体制',
+                        '段階的なスキル向上計画'
+                    ]
+                });
+            }
+            
+            // 個人別改善提案の集約
+            const personalImprovements = {};
+            individual.forEach(analysis => {
+                analysis.recommendations.forEach(rec => {
+                    if (!personalImprovements[rec.category]) {
+                        personalImprovements[rec.category] = [];
+                    }
+                    personalImprovements[rec.category].push(rec);
+                });
+            });
+            
+            Object.keys(personalImprovements).forEach(category => {
+                const recs = personalImprovements[category];
+                const priority = recs.some(r => r.priority === 'high') ? 'high' : 'medium';
+                
+                const targetPriority = priority === 'high' ? highPriority : mediumPriority;
+                targetPriority.push({
+                    title: `${category}分野の強化`,
+                    description: `${recs.length}名に改善が必要`,
+                    actions: [...new Set(recs.map(r => r.action))]
+                });
+            });
+            
+            // 長期的改善提案
+            lowPriority.push({
+                title: '継続的改善体制の構築',
+                description: '組織文化としてのDX推進',
+                actions: [
+                    '定期的な組織評価の実施',
+                    'DX推進委員会の設置',
+                    '外部専門家との連携体制構築'
+                ]
+            });
+            
+            // 表示
+            [
+                { title: '優先改善項目', items: highPriority, class: 'priority-high' },
+                { title: '重要改善項目', items: mediumPriority, class: 'priority-medium' },
+                { title: '計画的改善項目', items: lowPriority, class: 'priority-low' }
+            ].forEach(section => {
+                if (section.items.length > 0) {
+                    html += `<h5 class="font-bold mb-3 text-lg">${section.title}</h5>`;
+                    section.items.forEach(item => {
+                        html += `
+                            <div class="improvement-section ${section.class}">
+                                <h6 class="font-bold mb-2">${item.title}</h6>
+                                <p class="text-sm text-gray-600 mb-3">${item.description}</p>
+                                <ul class="list-disc list-inside text-sm space-y-1">
+                                    ${item.actions.map(action => `<li>${action}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                    });
+                }
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('improvementPlans').innerHTML = html;
+        }
+
+        // レーダーチャート作成
+        function createRadarChart(stats) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            if (window.organizationChart) {
+                window.organizationChart.destroy();
+            }
+
+            const datasets = [];
+            const colors = [
+                { border: 'rgb(59, 130, 246)', bg: 'rgba(59, 130, 246, 0.1)' },
+                { border: 'rgb(16, 185, 129)', bg: 'rgba(16, 185, 129, 0.1)' },
+                { border: 'rgb(139, 92, 246)', bg: 'rgba(139, 92, 246, 0.1)' }
+            ];
+
+            let colorIndex = 0;
+            Object.keys(stats.typeStats).forEach(type => {
+                if (stats.typeStats[type].count > 0) {
+                    const categoryScores = [];
+                    for (let i = 0; i < 5; i++) {
+                        const scores = stats.typeStats[type].members.map(member => 
+                            (member.scores[i * 2] + member.scores[i * 2 + 1]) / 2
+                        );
+                        categoryScores.push(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+                    }
+
+                    datasets.push({
+                        label: getPersonTypeDisplay(type),
+                        data: categoryScores,
+                        borderColor: colors[colorIndex].border,
+                        backgroundColor: colors[colorIndex].bg,
+                        borderWidth: 2,
+                        pointRadius: 4
+                    });
+                    colorIndex++;
+                }
+            });
+
+            window.organizationChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['基礎知識', '課題把握', '連携・環境', 'ツール活用', 'サービス創出'],
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 5,
+                            min: 0,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // AI分析コメント生成
+        function displayAIAnalysis(data) {
+            const { stats, level, balance, individual } = data;
+            
+            let comment = `【組織DX推進力総合評価】\n\n`;
+            comment += `■ 組織レベル評価\n`;
+            comment += `現在の組織レベルは「レベル${level.level}：${level.description}」です。\n`;
+            comment += `${level.reason}\n\n`;
+            
+            comment += `■ 組織構成分析\n`;
+            comment += `・総メンバー数：${stats.totalMembers}名\n`;
+            comment += `・組織全体平均：${stats.organizationAverage.toFixed(1)}\n`;
+            comment += `・標準偏差：${stats.organizationStdDev.toFixed(2)} ${stats.organizationStdDev > 0.3 ? '(要改善)' : '(良好)'}\n`;
+            comment += `・DX推進リーダー：${stats.typeStats['dx-leader'].count}名（平均${stats.typeStats['dx-leader'].average.toFixed(1)}）\n`;
+            comment += `・一般行政職員：${stats.typeStats['general-staff'].count}名（平均${stats.typeStats['general-staff'].average.toFixed(1)}）\n`;
+            comment += `・高度専門人材：${stats.typeStats['expert'].count}名（平均${stats.typeStats['expert'].average.toFixed(1)}）\n\n`;
+            
+            comment += `■ バランス評価\n`;
+            comment += `${balance.message}\n`;
+            if (balance.recommendation) {
+                comment += `推奨対応：${balance.recommendation}\n`;
+            }
+            comment += `\n`;
+            
+            comment += `■ カテゴリ別分析\n`;
+            const categoryNames = ['基礎知識', '課題把握', '連携・環境', 'ツール活用', 'サービス創出'];
+            stats.categoryAverages.forEach((avg, index) => {
+                const status = avg >= 3.5 ? '良好' : avg >= 3.0 ? '標準' : '要改善';
+                comment += `・${categoryNames[index]}：${avg.toFixed(1)} (${status})\n`;
+            });
+            comment += `\n`;
+            
+            comment += `■ 個人別分析サマリー\n`;
+            const highPerformers = individual.filter(a => a.member.averageScore >= 4.0);
+            const lowPerformers = individual.filter(a => a.member.averageScore < 3.0);
+            
+            if (highPerformers.length > 0) {
+                comment += `高スキル者：${highPerformers.map(a => a.member.personId).join(', ')} (${highPerformers.length}名)\n`;
+            }
+            if (lowPerformers.length > 0) {
+                comment += `重点支援対象：${lowPerformers.map(a => a.member.personId).join(', ')} (${lowPerformers.length}名)\n`;
+            }
+            comment += `\n`;
+            
+            comment += `■ 戦略的提言\n`;
+            if (level.level < 3) {
+                comment += `・基礎スキル向上が最優先課題です\n`;
+                comment += `・組織全体の底上げに注力してください\n`;
+            } else if (level.level < 4) {
+                comment += `・実践的なプロジェクトを通じたスキル向上が有効です\n`;
+                comment += `・組織横断的な取り組みを推進してください\n`;
+            } else {
+                comment += `・現在の強みを活かした更なる発展が期待できます\n`;
+                comment += `・革新的なサービス創出に挑戦してください\n`;
+            }
+            
+            if (stats.organizationStdDev > 0.3) {
+                comment += `・スキル格差の是正が重要です\n`;
+                comment += `・チーム全体でのスキル共有を促進してください\n`;
+            }
+            
+            comment += `\n■ 今後の展望\n`;
+            comment += `継続的な評価とスキル向上により、組織全体のDX推進力を着実に向上させることが可能です。\n`;
+            comment += `特に${stats.categoryAverages.indexOf(Math.min(...stats.categoryAverages)) === 0 ? '基礎知識' : 
+                stats.categoryAverages.indexOf(Math.min(...stats.categoryAverages)) === 1 ? '課題把握' :
+                stats.categoryAverages.indexOf(Math.min(...stats.categoryAverages)) === 2 ? '連携・環境' :
+                stats.categoryAverages.indexOf(Math.min(...stats.categoryAverages)) === 3 ? 'ツール活用' : 'サービス創出'}分野の強化が、組織全体の成長に大きく寄与します。`;
+            
+            document.getElementById('aiAnalysis').innerHTML = comment;
+        }
+
+        // 結果エクスポート
+        function exportResults() {
+            if (!analysisData) return;
+
+            const { stats, level, balance } = analysisData;
+            
+            let csv = '\uFEFF';
+            csv += '項目,内容\n';
+            csv += `評価日時,${new Date().toLocaleString('ja-JP')}\n`;
+            csv += `組織レベル,レベル${level.level}\n`;
+            csv += `レベル説明,${level.description}\n`;
+            csv += `組織全体平均,${stats.organizationAverage.toFixed(1)}\n`;
+            csv += `標準偏差,${stats.organizationStdDev.toFixed(2)}\n`;
+            csv += `総メンバー数,${stats.totalMembers}名\n`;
+            csv += `DX推進リーダー,${stats.typeStats['dx-leader'].count}名（平均${stats.typeStats['dx-leader'].average.toFixed(1)}）\n`;
+            csv += `一般行政職員,${stats.typeStats['general-staff'].count}名（平均${stats.typeStats['general-staff'].average.toFixed(1)}）\n`;
+            csv += `高度専門人材,${stats.typeStats['expert'].count}名（平均${stats.typeStats['expert'].average.toFixed(1)}）\n`;
+            csv += `バランス評価,${balance.message}\n`;
+            
+            csv += '\n\n個人別詳細,\n';
+            csv += '個人ID,部署,役職,人材類型,平均スコア,項目1,項目2,項目3,項目4,項目5,項目6,項目7,項目8,項目9,項目10\n';
+            
+            teamMembers.forEach(member => {
+                csv += `${member.personId},${member.department},${member.position},${getPersonTypeDisplay(member.personType)},${member.averageScore},`;
+                csv += `${member.scores.join(',')}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `組織評価結果_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
+    <script id="html_badge_script1">
+        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
+            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDhbBU%2BKY3Q8VAdYu9En3pKogFOzOjMJWl%2BvrSz5aoU8BN1KpHG1%2BNZ7uU87Og8pjNoovl%2Bre5sV5gLh9%2Bp3%2BSZ2JMYEz3CDYHmLSaQa6UYb7bVrxGf7Tuy%2B%2B7maTeDLgATozvC7e8yK8A7qr6X4DrvJt2qfIt9E5QaWOZGHdQxurkSWiEQq9WsjVDMBH1SmT0xA7EjoUP6fKsiV%2Fp7Gy9Yu%2FOcnyTpSNi9DUcQlDUugzjaCr2D8HMNG9dCCrHpXDDxYwaiAh3k4IxZqy%2BNBwNZSW3BIhhKXp2qAyS9sH%2FgpJerXyeCeVWbdCYUmK677RkMRxzpBYBiB8xrvtZ8O%2F34Hykxy6zJfyHKhm8dReJczbwM3MeCxnu7I9dUSJ%2BrXYxyTZ4UnFhDnds5ar4BJcufguYr0eNhWt0KMuNCwRXWXK7OSzNIHZkVaiW1x6AqRr8MsNLWIHWE%2FFkXBm7p71DCbURMFcecU615DTgVafpIkxlRHKw0su8I7A2dty3VQDmIqSypptHZPKe2g%2F1X1V%2Bk3CUYTC3BJh6ovgLMBjCvi8";
+        window.__genspark_locale = "ja-JP";
+        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDhbBU+KY3Q8VAdYu9En3pKogFOzOjMJWl+vrSz5aoU8BN1KpHG1+NZ7uU87Og8pjNoovl+re5sV5gLh9+p3+SZ2JMYEz3CDYHmLSaQa6UYb7bVrxGf7Tuy++7maTeDLgATozvC7e8yK8A7qr6X4DrvJt2qfIt9E5QaWOZGHdQxurkSWiEQq9WsjVDMBH1SmT0xA7EjoUP6fKsiV/p7Gy9Yu/OcnyTpSNi9DUcQlDUugzjaCr2D8HMNG9dCCrHpXDDxYwaiAh3k4IxZqy+NBwNZSW3BIhhKXp2qAyS9sH/gpJerXyeCeVWbdCYUmK677RkMRxzpBYBiB8xrvtZ8O/34Hykxy6zJfyHKhm8dReJczbwM3MeCxnu7I9dUSJ+rXYxyTZ4UnFhDnds5ar4BJcufguYr0eNhWt0KMuNCwRXWXK7OSzNIHZkVaiW1x6AqRr8MsNLWIHWE/FkXBm7p71DCbURMFcecU615DTgVafpIkxlRHKw0su8I7A2dty3VQDmIqSypptHZPKe2g/1X1V+k3CUYTC3BJh6ovgLMBjCvi8";
+    </script>
+    
+    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
+    
